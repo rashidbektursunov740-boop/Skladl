@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Склад стройматериалов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#18191A;
+    --bg:#F1F1F1;
+    --surface:#FFFFFF;
+    --line:#EBEBEB;
+    --muted:#8D8D93;
+    --accent:#FFCC00;
+    --accent-press:#E8B900;
+    --accent-ink:#18191A;
+    --in-color:#17A85A;
+    --in-tint:#E4F8EC;
+    --out-color:#F5372A;
+    --out-tint:#FDE6E4;
+    --radius-lg:20px;
+    --radius-md:16px;
+    --radius-sm:12px;
+    --shadow:0 2px 14px rgba(24,25,26,0.07);
+    --shadow-strong:0 6px 20px rgba(24,25,26,0.22);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope',sans-serif;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:520px;
+    min-height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  h1,h2,h3{
+    font-family:'Unbounded',sans-serif;
+    margin:0;
+  }
+  /* HEADER */
+  header{
+    padding:16px 14px 14px;
+    background:var(--bg);
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  header .brand{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:2px 4px 12px;
+  }
+  header .brand h1{
+    font-size:17px;
+    letter-spacing:0.01em;
+    color:var(--ink);
+  }
+  header .brand small{
+    color:var(--muted);
+    font-size:12.5px;
+    font-weight:600;
+  }
+  .search-row{
+    display:flex;
+    gap:8px;
+  }
+  .search-box{
+    flex:1;
+    display:flex;
+    align-items:center;
+    background:var(--surface);
+    border-radius:var(--radius-md);
+    padding:0 14px;
+    box-shadow:var(--shadow);
+  }
+  .search-box svg{flex-shrink:0;color:var(--muted);}
+  .search-box input{
+    border:none;
+    background:transparent;
+    outline:none;
+    padding:14px 10px;
+    font-size:14.5px;
+    width:100%;
+    font-family:inherit;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .search-box input::placeholder{color:var(--muted);font-weight:500;}
+  select.sort-select{
+    margin-top:10px;
+    width:100%;
+    background:var(--surface);
+    border:none;
+    border-radius:var(--radius-sm);
+    padding:11px 12px;
+    font-family:inherit;
+    font-weight:600;
+    font-size:13px;
+    color:var(--ink);
+    box-shadow:var(--shadow);
+  }
+  .filter-row{
+    display:flex;
+    gap:8px;
+  }
+  .chip{
+    flex:1;
+    text-align:center;
+    padding:9px 0;
+    border-radius:999px;
+    background:var(--surface);
+    border:none;
+    color:var(--muted);
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+    box-shadow:var(--shadow);
+  }
+  .chip.active{
+    background:var(--ink);
+    color:var(--accent);
+  }
+
+  /* MAIN */
+  main{
+    flex:1;
+    overflow-y:auto;
+    padding:8px 14px 104px;
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* MATERIAL ROW */
+  .row-card{
+    background:var(--surface);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    margin-bottom:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+  }
+  .row-card:active{background:#FAFAF9;}
+  .row-card .info .name{
+    font-weight:700;
+    font-size:14.5px;
+  }
+  .row-card .info .code{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:3px;
+    font-weight:600;
+  }
+  .row-card .stock{
+    text-align:right;
+  }
+  .row-card .stock .num{
+    font-family:'Unbounded',sans-serif;
+    font-size:17px;
+    font-weight:700;
+  }
+  .row-card .stock.zero .num{color:var(--out-color);}
+  .row-card .stock .unit{
+    font-size:11px;
+    color:var(--muted);
+    font-weight:600;
+  }
+
+  /* HISTORY ROW */
+  .hist-row{
+    background:var(--surface);
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:var(--shadow);
+  }
+  .badge{
+    font-size:11px;
+    font-weight:700;
+    padding:5px 10px;
+    border-radius:999px;
+    flex-shrink:0;
+  }
+  .badge.in{background:var(--in-tint);color:var(--in-color);}
+  .badge.out{background:var(--out-tint);color:var(--out-color);}
+  .hist-row .mid{flex:1;min-width:0;}
+  .hist-row .mid .name{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hist-row .mid .meta{font-size:11.5px;color:var(--muted);margin-top:3px;font-weight:600;}
+  .hist-row .qty{font-family:'Unbounded',sans-serif;font-weight:700;font-size:14px;white-space:nowrap;}
+  .hist-row .qty.in{color:var(--in-color);}
+  .hist-row .qty.out{color:var(--out-color);}
+  .trash-btn{
+    border:none;background:var(--bg);color:var(--muted);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:7px;flex-shrink:0;border-radius:999px;
+  }
+  .trash-btn:active{color:var(--out-color);background:var(--out-tint);}
+
+  /* EMPTY STATE */
+  .empty{
+    text-align:center;
+    padding:56px 20px;
+    color:var(--muted);
+  }
+  .empty h3{font-size:15px;color:var(--ink);margin-bottom:6px;font-weight:700;}
+  .empty p{font-size:13px;margin:0;font-weight:500;}
+
+  /* STATS */
+  .stats-search-results{margin-top:2px;}
+  .stat-card{
+    background:var(--surface);
+    border-radius:var(--radius-lg);
+    padding:18px;
+    margin-top:12px;
+    box-shadow:var(--shadow);
+  }
+  .stat-card h2{font-size:16.5px;}
+  .stat-card .code-line{font-size:12px;color:var(--muted);margin-top:3px;margin-bottom:14px;font-weight:600;}
+  .stat-remain{
+    background:var(--bg);
+    border-radius:var(--radius-sm);
+    padding:14px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:14px;
+  }
+  .stat-remain .label{font-size:13px;color:var(--muted);font-weight:600;}
+  .stat-remain .value{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:700;}
+  .month-block{margin-bottom:12px;}
+  .month-block .month-title{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--muted);
+    margin-bottom:7px;
+    text-transform:capitalize;
+  }
+  .month-stats{display:flex;gap:8px;}
+  .month-stat{
+    flex:1;
+    border-radius:var(--radius-sm);
+    padding:11px 10px;
+    text-align:center;
+  }
+  .month-stat.in{background:var(--in-tint);}
+  .month-stat.out{background:var(--out-tint);}
+  .month-stat .n{font-family:'Unbounded',sans-serif;font-weight:700;font-size:15px;}
+  .month-stat.in .n{color:var(--in-color);}
+  .month-stat.out .n{color:var(--out-color);}
+  .month-stat .l{font-size:10.5px;color:var(--muted);margin-top:3px;font-weight:600;}
+
+  .period-block{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+  .period-title{font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:8px;}
+  .period-row{display:flex;gap:8px;align-items:flex-end;}
+  .period-field{flex:1;}
+  .period-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+  .period-field input{
+    width:100%;padding:9px 8px;border:1px solid var(--line);border-radius:var(--radius-sm);
+    font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);background:var(--bg);
+  }
+  .period-go{
+    width:44px;height:38px;border-radius:var(--radius-sm);background:var(--ink);color:var(--accent);
+    border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+  }
+  .period-result{margin-top:12px;}
+  .period-result .month-title{text-transform:none;}
+
+  .ops-title{font-size:12.5px;font-weight:700;color:var(--muted);margin:18px 4px 8px;}
+
+  /* BOTTOM NAV */
+  nav.bottom{
+    position:fixed;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:100%;
+    max-width:520px;
+    background:var(--surface);
+    display:flex;
+    padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+    border-radius:22px 22px 0 0;
+    box-shadow:0 -4px 18px rgba(24,25,26,0.10);
+    z-index:20;
+    gap:4px;
+  }
+  nav.bottom button{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--muted);
+    padding:6px 0 4px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    font-family:inherit;
+    font-size:10.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  nav.bottom button .nav-ico{
+    width:38px;height:30px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  }
+  nav.bottom button.active{color:var(--ink);}
+  nav.bottom button.active .nav-ico{background:var(--accent);color:var(--ink);}
+
+  /* FAB */
+  .fab{
+    position:fixed;
+    right:16px;
+    bottom:88px;
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:var(--accent);
+    color:var(--ink);
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:var(--shadow-strong);
+    z-index:30;
+    cursor:pointer;
+  }
+  .fab:active{background:var(--accent-press);}
+
+  /* MODAL / SHEET */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(24,25,26,0.5);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:var(--surface);
+    width:100%;
+    max-width:520px;
+    border-radius:24px 24px 0 0;
+    padding:10px 20px calc(20px + env(safe-area-inset-bottom));
+    max-height:88vh;
+    overflow-y:auto;
+    animation:slideup .18s ease-out;
+  }
+  @keyframes slideup{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .drag-handle{
+    width:40px;height:4px;background:var(--line);border-radius:999px;margin:6px auto 14px;
+  }
+  .sheet-head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;
+  }
+  .sheet-head h2{font-size:17px;}
+  .close-x{border:none;background:var(--bg);color:var(--muted);cursor:pointer;padding:7px;border-radius:999px;display:flex;}
+  .field{margin-bottom:12px;}
+  .field label{
+    display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700;
+  }
+  .field input,.field select{
+    width:100%;
+    padding:13px 14px;
+    border:1.5px solid var(--line);
+    border-radius:var(--radius-sm);
+    font-family:inherit;
+    font-size:14.5px;
+    font-weight:600;
+    background:var(--bg);
+    color:var(--ink);
+    outline:none;
+  }
+  .field input:focus,.field select:focus{border-color:var(--accent);background:var(--surface);}
+  .field-error{color:var(--out-color);font-size:12px;margin-top:5px;display:none;font-weight:600;}
+  .btn{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:var(--radius-sm);
+    font-family:'Unbounded',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .btn-primary{background:var(--accent);color:var(--accent-ink);}
+  .btn-primary:active{background:var(--accent-press);}
+  .btn-secondary{background:var(--bg);color:var(--ink);}
+  .btn-danger{background:var(--out-color);color:#fff;}
+  .btn-row{display:flex;gap:8px;margin-top:4px;}
+  .btn-row .btn{margin-top:0;}
+  .action-grid{display:flex;gap:8px;margin:14px 0;}
+  .action-grid button{
+    flex:1;padding:15px 0;border-radius:var(--radius-sm);border:none;
+    font-family:'Unbounded',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;
+  }
+  .action-grid .act-out{background:var(--ink);color:var(--accent);}
+  .icon-row{display:flex;gap:8px;margin-top:4px;}
+  .icon-row button{
+    flex:1;padding:12px 0;border-radius:var(--radius-sm);border:none;
+    background:var(--bg);color:var(--ink);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .icon-row button.danger{color:var(--out-color);background:var(--out-tint);}
+  .detail-stock{
+    background:var(--bg);border-radius:var(--radius-sm);padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;
+  }
+  .detail-stock .value{font-family:'Unbounded',sans-serif;font-size:21px;font-weight:700;}
+
+  /* TOAST */
+  #toast{
+    position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--accent);padding:11px 20px;border-radius:999px;
+    font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:all .2s ease;z-index:60;
+    max-width:90%;text-align:center;box-shadow:var(--shadow-strong);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  ::-webkit-scrollbar{width:0;height:0;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <h1>Склад</h1>
+      <button class="icon-btn" id="btn-refresh" aria-label="Обновить данные" style="width:34px;height:34px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+    <small id="tab-subtitle" style="display:block;margin:-8px 4px 12px;">стройматериалы</small>
+
+    <!-- ДОМ (материалы) HEADER CONTROLS -->
+    <div id="header-materials">
+      <div class="search-row">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="mat-search" placeholder="Название или код" autocomplete="off">
+        </div>
+      </div>
+      <select class="sort-select" id="mat-sort">
+        <option value="name">Сортировка: по названию</option>
+        <option value="code">Сортировка: по коду</option>
+        <option value="stock-asc">Сначала мало на складе</option>
+      </select>
+    </div>
+
+    <!-- ПРИХОД HEADER CONTROLS -->
+    <div id="header-prihod" style="display:none;">
+      <div class="search-row">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="prihod-search" placeholder="Название или код товара" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY HEADER CONTROLS -->
+    <div id="header-history" style="display:none;">
+      <div class="filter-row">
+        <button class="chip active" data-hfilter="all">Все</button>
+        <button class="chip" data-hfilter="in">Приход</button>
+        <button class="chip" data-hfilter="out">Расход</button>
+      </div>
+    </div>
+
+    <!-- STATS HEADER CONTROLS -->
+    <div id="header-stats" style="display:none;">
+      <div class="search-row">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="stats-search" placeholder="Найти товар для статистики" autocomplete="off">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="view active" id="view-materials"></div>
+    <div class="view" id="view-prihod"></div>
+    <div class="view" id="view-history"></div>
+    <div class="view" id="view-stats"></div>
+  </main>
+
+  <button class="fab" id="fab-add-material" style="display:none;" aria-label="Добавить материал">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+
+  <nav class="bottom">
+    <button class="tab-btn active" data-tab="materials">
+      <span class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-4.5v-6.5h-7V21H4a1 1 0 0 1-1-1V9.5z"/></svg></span>
+      Дом
+    </button>
+    <button class="tab-btn" data-tab="prihod">
+      <span class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span>
+      Приход
+    </button>
+    <button class="tab-btn" data-tab="stats">
+      <span class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      Статистика
+    </button>
+    <button class="tab-btn" data-tab="history">
+      <span class="nav-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg></span>
+      История
+    </button>
+  </nav>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ---------- BACKEND (AMVERA) ----------
+// ЗАМЕНИ на адрес своего приложения после деплоя на Amvera
+const BACKEND_URL = "https://ВСТАВЬ-СЮДА.amvera.io";
+
+async function apiGet(path){
+  const res = await fetch(`${BACKEND_URL}/${path}`);
+  if(!res.ok) throw new Error('get failed');
+  return await res.json();
+}
+async function apiPost(path, data){
+  const res = await fetch(`${BACKEND_URL}/${path}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('post failed');
+}
+async function apiPatch(path, data){
+  const res = await fetch(`${BACKEND_URL}/${path}`, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('patch failed');
+}
+async function apiDelete(path){
+  const res = await fetch(`${BACKEND_URL}/${path}`, { method:'DELETE' });
+  if(!res.ok) throw new Error('delete failed');
+}
+
+// ---------- STATE ----------
+let materials = [];
+let operations = [];
+let currentTab = 'materials';
+let historyFilter = 'all';
+let matSort = 'name';
+let matQuery = '';
+let statsQuery = '';
+let selectedStatsId = null;
+let prihodQuery = '';
+let periodFrom = '';
+let periodTo = '';
+
+const UNITS = ['шт','мешок','м²','м³','м','кг','т','л','рулон','упаковка'];
+
+// ---------- LOAD DATA ----------
+async function loadAll(){
+  try{
+    materials = await apiGet('materials');
+  }catch(e){ console.error(e); materials = []; showToast('Не удалось загрузить товары'); }
+  try{
+    const rows = await apiGet('operations');
+    operations = rows.map(o=>({...o, qty: parseFloat(o.qty)||0}));
+  }catch(e){ console.error(e); operations = []; showToast('Не удалось загрузить операции'); }
+  switchTab(currentTab);
+}
+async function refreshAll(){
+  showToast('Обновляю...');
+  await loadAll();
+  showToast('Данные обновлены');
+}
+
+function uid(){
+  return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+}
+
+// ---------- COMPUTATIONS ----------
+function stockOf(materialId){
+  return operations.reduce((sum,o)=>{
+    if(o.materialId !== materialId) return sum;
+    return sum + (o.type === 'in' ? o.qty : -o.qty);
+  },0);
+}
+function monthStats(materialId, year, month){
+  let inSum=0, outSum=0;
+  operations.forEach(o=>{
+    if(o.materialId !== materialId) return;
+    const d = new Date(o.ts);
+    if(d.getFullYear()===year && d.getMonth()===month){
+      if(o.type==='in') inSum += o.qty; else outSum += o.qty;
+    }
+  });
+  return {inSum, outSum};
+}
+function periodStats(materialId, fromStr, toStr){
+  const from = new Date(fromStr + 'T00:00:00');
+  const to = new Date(toStr + 'T23:59:59');
+  let inSum=0, outSum=0;
+  operations.forEach(o=>{
+    if(o.materialId !== materialId) return;
+    const d = new Date(o.ts);
+    if(d >= from && d <= to){
+      if(o.type==='in') inSum += o.qty; else outSum += o.qty;
+    }
+  });
+  return {inSum, outSum};
+}
+function monthLabel(year, month){
+  const d = new Date(year, month, 1);
+  return d.toLocaleDateString('ru-RU', {month:'long', year:'numeric'});
+}
+
+// ---------- TOAST ----------
+let toastTimer=null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ---------- SHEET / MODAL ----------
+function openSheet(html){
+  document.getElementById('sheet').innerHTML = '<div class="drag-handle"></div>' + html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('sheet').innerHTML = '';
+}
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'overlay') closeSheet();
+});
+
+// ---------- CONFIRM DIALOG ----------
+function confirmAction(title, text, onYes){
+  openSheet(`
+    <div class="sheet-head"><h2>${title}</h2>
+      <button class="close-x" onclick="closeSheet()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-top:0;font-weight:500;">${text}</p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeSheet()">Отмена</button>
+      <button class="btn btn-danger" style="flex:1" id="confirm-yes-btn">Удалить</button>
+    </div>
+  `);
+  document.getElementById('confirm-yes-btn').onclick = ()=>{ onYes(); closeSheet(); };
+}
+
+// ---------- ADD / EDIT MATERIAL ----------
+function openMaterialForm(existing){
+  const isEdit = !!existing;
+  openSheet(`
+    <div class="sheet-head">
+      <h2>${isEdit ? 'Изменить материал' : 'Новый материал'}</h2>
+      <button class="close-x" onclick="closeSheet()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="field">
+      <label>Название</label>
+      <input id="f-name" value="${isEdit ? escapeHtml(existing.name) : ''}" placeholder="Например: Цемент М500">
+    </div>
+    <div class="field">
+      <label>Код товара</label>
+      <input id="f-code" value="${isEdit ? escapeHtml(existing.code) : ''}" placeholder="Например: ЦЕМ-001">
+      <div class="field-error" id="err-code">Такой код уже используется</div>
+    </div>
+    <button class="btn btn-primary" id="save-material-btn">${isEdit ? 'Сохранить' : 'Добавить'}</button>
+  `);
+  document.getElementById('save-material-btn').onclick = async ()=>{
+    const name = document.getElementById('f-name').value.trim();
+    const code = document.getElementById('f-code').value.trim();
+    const unit = 'шт';
+    if(!name || !code){ showToast('Заполните все поля'); return; }
+    const dup = materials.find(m => m.code.toLowerCase()===code.toLowerCase() && (!isEdit || m.id!==existing.id));
+    if(dup){ document.getElementById('err-code').style.display='block'; return; }
+    try{
+      if(isEdit){
+        await apiPatch(`materials/${existing.id}`, {name, code, unit});
+        existing.name = name; existing.code = code; existing.unit = unit;
+        showToast('Материал обновлён');
+      }else{
+        const newMat = {id: uid(), name, code, unit};
+        await apiPost('materials', newMat);
+        materials.push(newMat);
+        showToast('Материал добавлен');
+      }
+      closeSheet();
+      renderCurrentTab();
+    }catch(e){ console.error(e); showToast('Ошибка сохранения — проверь связь'); }
+  };
+}
+
+// ---------- MATERIAL DETAIL SHEET ----------
+function openMaterialDetail(mat){
+  const stock = stockOf(mat.id);
+  openSheet(`
+    <div class="sheet-head">
+      <h2>${escapeHtml(mat.name)}</h2>
+      <button class="close-x" onclick="closeSheet()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">Код: ${escapeHtml(mat.code)}</div>
+    <div class="detail-stock">
+      <span style="font-size:13px;color:var(--muted);font-weight:600;">Остаток</span>
+      <span class="value">${formatNum(stock)} <span style="font-size:13px;font-weight:500;">${escapeHtml(mat.unit)}</span></span>
+    </div>
+    <div class="action-grid">
+      <button class="act-out" id="btn-op-out" style="flex:1 1 100%;">Продать</button>
+    </div>
+    <div class="icon-row">
+      <button id="btn-edit-mat">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Изменить
+      </button>
+      <button class="danger" id="btn-delete-mat">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Удалить
+      </button>
+    </div>
+  `);
+  document.getElementById('btn-op-out').onclick = ()=>openOperationForm(mat,'out');
+  document.getElementById('btn-edit-mat').onclick = ()=>openMaterialForm(mat);
+  document.getElementById('btn-delete-mat').onclick = ()=>{
+    confirmAction('Удалить материал?', `«${escapeHtml(mat.name)}» будет удалён из списка товаров. История операций по нему сохранится.`, async ()=>{
+      try{
+        await apiDelete(`materials/${mat.id}`);
+        materials = materials.filter(m=>m.id!==mat.id);
+        showToast('Материал удалён');
+      }catch(e){ console.error(e); showToast('Ошибка удаления — проверь связь'); }
+      renderCurrentTab();
+    });
+  };
+}
+
+// ---------- ADD OPERATION (приход/расход) ----------
+function openOperationForm(mat, type){
+  const stock = stockOf(mat.id);
+  openSheet(`
+    <div class="sheet-head">
+      <h2>${type==='in' ? 'Приход' : 'Продажа'}: ${escapeHtml(mat.name)}</h2>
+      <button class="close-x" onclick="closeSheet()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    ${type==='out' ? `<div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;font-weight:600;">Доступно: ${formatNum(stock)} ${escapeHtml(mat.unit)}</div>` : ''}
+    <div class="field">
+      <label>Количество (${escapeHtml(mat.unit)})</label>
+      <input id="f-qty" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+      <div class="field-error" id="err-qty">Проверьте количество</div>
+    </div>
+    <button class="btn btn-primary" id="save-op-btn">Сохранить</button>
+  `);
+  document.getElementById('save-op-btn').onclick = async ()=>{
+    const qty = parseFloat(document.getElementById('f-qty').value);
+    const errEl = document.getElementById('err-qty');
+    if(!qty || qty<=0){ errEl.textContent='Укажите количество больше нуля'; errEl.style.display='block'; return; }
+    if(type==='out' && qty > stock){ errEl.textContent=`Недостаточно на складе: доступно ${formatNum(stock)}`; errEl.style.display='block'; return; }
+    const newOp = {
+      id: uid(),
+      materialId: mat.id,
+      materialName: mat.name,
+      materialCode: mat.code,
+      unit: mat.unit,
+      type,
+      qty,
+      ts: new Date().toISOString()
+    };
+    try{
+      await apiPost('operations', newOp);
+      operations.push(newOp);
+      showToast(type==='in' ? 'Приход добавлен' : 'Продажа записана');
+      closeSheet();
+      renderCurrentTab();
+    }catch(e){ console.error(e); showToast('Ошибка сохранения — проверь связь'); }
+  };
+}
+
+// ---------- HELPERS ----------
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function formatNum(n){
+  const rounded = Math.round(n*100)/100;
+  return rounded.toLocaleString('ru-RU');
+}
+function formatDateTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'}) + ', ' +
+         d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+}
+function todayISODate(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+// ---------- RENDER: MATERIALS ----------
+function renderMaterials(){
+  const el = document.getElementById('view-materials');
+  let list = materials.filter(m=>{
+    const q = matQuery.toLowerCase();
+    return !q || m.name.toLowerCase().includes(q) || m.code.toLowerCase().includes(q);
+  });
+  list = list.slice().sort((a,b)=>{
+    if(matSort==='name') return a.name.localeCompare(b.name,'ru');
+    if(matSort==='code') return a.code.localeCompare(b.code,'ru');
+    if(matSort==='stock-asc') return stockOf(a.id) - stockOf(b.id);
+    return 0;
+  });
+
+  if(materials.length===0){
+    el.innerHTML = `<div class="empty">
+      <h3>Пока нет товаров</h3>
+      <p>Нажмите жёлтую кнопку «+» внизу, чтобы добавить первый материал.</p>
+    </div>`;
+    return;
+  }
+  if(list.length===0){
+    el.innerHTML = `<div class="empty"><h3>Ничего не найдено</h3><p>Попробуйте другой запрос.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(m=>{
+    const stock = stockOf(m.id);
+    return `<div class="row-card" data-id="${m.id}">
+      <div class="info">
+        <div class="name">${escapeHtml(m.name)}</div>
+        <div class="code">${escapeHtml(m.code)}</div>
+      </div>
+      <div class="stock ${stock<=0 ? 'zero' : ''}">
+        <div class="num">${formatNum(stock)}</div>
+        <div class="unit">${escapeHtml(m.unit)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.row-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const mat = materials.find(m=>m.id===card.dataset.id);
+      if(mat) openMaterialDetail(mat);
+    });
+  });
+}
+
+// ---------- RENDER: ПРИХОД ----------
+function renderPrihod(){
+  const el = document.getElementById('view-prihod');
+  let list = materials.filter(m=>{
+    const q = prihodQuery.toLowerCase();
+    return !q || m.name.toLowerCase().includes(q) || m.code.toLowerCase().includes(q);
+  }).slice().sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+
+  if(materials.length===0){
+    el.innerHTML = `<div class="empty">
+      <h3>Пока нет товаров</h3>
+      <p>Сначала добавьте материал на вкладке «Дом» (кнопка «+»).</p>
+    </div>`;
+    return;
+  }
+  if(list.length===0){
+    el.innerHTML = `<div class="empty"><h3>Ничего не найдено</h3><p>Попробуйте другой запрос.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(m=>{
+    const stock = stockOf(m.id);
+    return `<div class="row-card" data-id="${m.id}">
+      <div class="info">
+        <div class="name">${escapeHtml(m.name)}</div>
+        <div class="code">${escapeHtml(m.code)}</div>
+      </div>
+      <div class="stock ${stock<=0 ? 'zero' : ''}">
+        <div class="num">${formatNum(stock)}</div>
+        <div class="unit">${escapeHtml(m.unit)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.row-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const mat = materials.find(m=>m.id===card.dataset.id);
+      if(mat) openOperationForm(mat,'in');
+    });
+  });
+}
+
+// ---------- RENDER: HISTORY ----------
+function renderHistory(){
+  const el = document.getElementById('view-history');
+  let list = operations.slice().sort((a,b)=> new Date(b.ts)-new Date(a.ts));
+  if(historyFilter!=='all') list = list.filter(o=>o.type===historyFilter);
+
+  if(operations.length===0){
+    el.innerHTML = `<div class="empty"><h3>История пуста</h3><p>Здесь появятся все приходы и расходы материалов.</p></div>`;
+    return;
+  }
+  if(list.length===0){
+    el.innerHTML = `<div class="empty"><h3>Ничего нет</h3><p>По этому фильтру операций не найдено.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(o=>`
+    <div class="hist-row" data-id="${o.id}">
+      <span class="badge ${o.type}">${o.type==='in' ? 'Приход' : 'Расход'}</span>
+      <div class="mid">
+        <div class="name">${escapeHtml(o.materialName)}</div>
+        <div class="meta">${escapeHtml(o.materialCode)} · ${formatDateTime(o.ts)}</div>
+      </div>
+      <div class="qty ${o.type}">${o.type==='in' ? '+' : '−'}${formatNum(o.qty)}</div>
+      <button class="trash-btn" data-del="${o.id}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const id = btn.dataset.del;
+      const op = operations.find(o=>o.id===id);
+      if(op.type==='in'){
+        const stockAfter = stockOf(op.materialId) - op.qty;
+        if(stockAfter < -0.0001){
+          showToast(`Нельзя удалить: остаток «${op.materialName}» станет отрицательным`);
+          return;
+        }
+      }
+      confirmAction('Удалить запись?', `Операция «${op.type==='in'?'Приход':'Расход'} ${formatNum(op.qty)} ${op.unit} — ${escapeHtml(op.materialName)}» будет удалена без возможности восстановления.`, async ()=>{
+        try{
+          await apiDelete(`operations/${id}`);
+          operations = operations.filter(o=>o.id!==id);
+          showToast('Запись удалена');
+        }catch(e){ console.error(e); showToast('Ошибка удаления — проверь связь'); }
+        renderCurrentTab();
+      });
+    });
+  });
+}
+
+// ---------- RENDER: STATS ----------
+function renderStats(){
+  const el = document.getElementById('view-stats');
+  const q = statsQuery.toLowerCase();
+  const matches = q ? materials.filter(m=>m.name.toLowerCase().includes(q)||m.code.toLowerCase().includes(q)) : [];
+
+  let listHtml = '';
+  if(q && matches.length){
+    listHtml = `<div class="stats-search-results">` + matches.map(m=>`
+      <div class="row-card" data-id="${m.id}">
+        <div class="info">
+          <div class="name">${escapeHtml(m.name)}</div>
+          <div class="code">${escapeHtml(m.code)}</div>
+        </div>
+        <div class="stock"><div class="num">${formatNum(stockOf(m.id))}</div><div class="unit">${escapeHtml(m.unit)}</div></div>
+      </div>
+    `).join('') + `</div>`;
+  } else if(q && !matches.length){
+    listHtml = `<div class="empty"><h3>Ничего не найдено</h3><p>Проверьте название или код товара.</p></div>`;
+  }
+
+  let detailHtml = '';
+  const selected = materials.find(m=>m.id===selectedStatsId);
+  if(selected){
+    const now = new Date();
+    const curY = now.getFullYear(), curM = now.getMonth();
+    let prevY = curY, prevM = curM-1;
+    if(prevM<0){ prevM = 11; prevY = curY-1; }
+    const cur = monthStats(selected.id, curY, curM);
+    const prev = monthStats(selected.id, prevY, prevM);
+
+    if(!periodFrom) periodFrom = todayISODate();
+    if(!periodTo) periodTo = todayISODate();
+
+    let periodResultHtml = '';
+    if(window.__periodShown){
+      const pr = periodStats(selected.id, periodFrom, periodTo);
+      periodResultHtml = `
+        <div class="period-result">
+          <div class="month-title">Итог за период</div>
+          <div class="month-stats">
+            <div class="month-stat in"><div class="n">+${formatNum(pr.inSum)}</div><div class="l">приход</div></div>
+            <div class="month-stat out"><div class="n">−${formatNum(pr.outSum)}</div><div class="l">расход</div></div>
+          </div>
+        </div>`;
+    }
+
+    const matOps = operations.filter(o=>o.materialId===selected.id).sort((a,b)=> new Date(b.ts)-new Date(a.ts));
+    const opsHtml = matOps.length ? matOps.map(o=>`
+      <div class="hist-row">
+        <span class="badge ${o.type}">${o.type==='in' ? 'Приход' : 'Расход'}</span>
+        <div class="mid">
+          <div class="meta">${formatDateTime(o.ts)}</div>
+        </div>
+        <div class="qty ${o.type}">${o.type==='in' ? '+' : '−'}${formatNum(o.qty)}</div>
+      </div>
+    `).join('') : `<div class="empty" style="padding:24px 10px;"><p>По этому товару пока нет операций.</p></div>`;
+
+    detailHtml = `
+      <div class="stat-card">
+        <h2>${escapeHtml(selected.name)}</h2>
+        <div class="code-line">Код: ${escapeHtml(selected.code)}</div>
+        <div class="stat-remain">
+          <span class="label">Текущий остаток</span>
+          <span class="value">${formatNum(stockOf(selected.id))} ${escapeHtml(selected.unit)}</span>
+        </div>
+        <div class="month-block">
+          <div class="month-title">${monthLabel(curY,curM)}</div>
+          <div class="month-stats">
+            <div class="month-stat in"><div class="n">+${formatNum(cur.inSum)}</div><div class="l">приход</div></div>
+            <div class="month-stat out"><div class="n">−${formatNum(cur.outSum)}</div><div class="l">расход</div></div>
+          </div>
+        </div>
+        <div class="month-block">
+          <div class="month-title">${monthLabel(prevY,prevM)}</div>
+          <div class="month-stats">
+            <div class="month-stat in"><div class="n">+${formatNum(prev.inSum)}</div><div class="l">приход</div></div>
+            <div class="month-stat out"><div class="n">−${formatNum(prev.outSum)}</div><div class="l">расход</div></div>
+          </div>
+        </div>
+
+        <div class="period-block">
+          <div class="period-title">Свой период</div>
+          <div class="period-row">
+            <div class="period-field">
+              <label>С</label>
+              <input type="date" id="period-from" value="${periodFrom}">
+            </div>
+            <div class="period-field">
+              <label>По</label>
+              <input type="date" id="period-to" value="${periodTo}">
+            </div>
+            <button class="period-go" id="period-go-btn" aria-label="Показать">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          ${periodResultHtml}
+        </div>
+      </div>
+
+      <div class="ops-title">Операции по товару</div>
+      ${opsHtml}
+    `;
+  }
+
+  if(!q && !selected){
+    el.innerHTML = `<div class="empty"><h3>Найдите товар</h3><p>Введите название или код в поиске выше, чтобы увидеть остаток, статистику по месяцам, периодам и все операции.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = listHtml + detailHtml;
+  el.querySelectorAll('.row-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      selectedStatsId = card.dataset.id;
+      window.__periodShown = false;
+      renderStats();
+    });
+  });
+  const goBtn = document.getElementById('period-go-btn');
+  if(goBtn){
+    goBtn.addEventListener('click', ()=>{
+      periodFrom = document.getElementById('period-from').value || periodFrom;
+      periodTo = document.getElementById('period-to').value || periodTo;
+      window.__periodShown = true;
+      renderStats();
+    });
+  }
+}
+
+// ---------- TAB SWITCH ----------
+function renderCurrentTab(){
+  if(currentTab==='materials') renderMaterials();
+  if(currentTab==='prihod') renderPrihod();
+  if(currentTab==='history') renderHistory();
+  if(currentTab==='stats') renderStats();
+}
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.getElementById('header-materials').style.display = tab==='materials' ? 'block' : 'none';
+  document.getElementById('header-prihod').style.display = tab==='prihod' ? 'block' : 'none';
+  document.getElementById('header-history').style.display = tab==='history' ? 'block' : 'none';
+  document.getElementById('header-stats').style.display = tab==='stats' ? 'block' : 'none';
+  document.getElementById('fab-add-material').style.display = tab==='materials' ? 'flex' : 'none';
+  const subtitles = {materials:'стройматериалы', prihod:'приём товара на склад', history:'история операций', stats:'статистика по товару'};
+  document.getElementById('tab-subtitle').textContent = subtitles[tab];
+  renderCurrentTab();
+}
+
+// ---------- EVENTS ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchTab(btn.dataset.tab));
+});
+document.getElementById('fab-add-material').addEventListener('click', ()=>openMaterialForm(null));
+document.getElementById('mat-search').addEventListener('input', (e)=>{ matQuery = e.target.value; renderMaterials(); });
+document.getElementById('mat-sort').addEventListener('change', (e)=>{ matSort = e.target.value; renderMaterials(); });
+document.getElementById('prihod-search').addEventListener('input', (e)=>{ prihodQuery = e.target.value; renderPrihod(); });
+document.querySelectorAll('[data-hfilter]').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    historyFilter = chip.dataset.hfilter;
+    document.querySelectorAll('[data-hfilter]').forEach(c=>c.classList.toggle('active', c===chip));
+    renderHistory();
+  });
+});
+document.getElementById('stats-search').addEventListener('input', (e)=>{
+  statsQuery = e.target.value;
+  selectedStatsId = null;
+  renderStats();
+});
+
+document.getElementById('btn-refresh').addEventListener('click', ()=>{ refreshAll(); });
+
+// ---------- INIT ----------
+loadAll();
+</script>
+</body>
+</html>
