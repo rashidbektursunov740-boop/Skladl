@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Проверка связи</title>
+<style>
+  body{font-family:sans-serif; padding:16px; font-size:16px; line-height:1.5; word-break:break-word;}
+  .ok{color:green;}
+  .err{color:red;}
+</style>
+</head>
+<body>
+<h2>Проверка связи с сервером</h2>
+<p id="status">Проверяю...</p>
+
+<script>
+const URL_TO_TEST = "https://sklad-rasulbek0923.amvera.io/materials";
+const el = document.getElementById('status');
+
+fetch(URL_TO_TEST)
+  .then(res => {
+    el.innerHTML += `<br>Код ответа: ${res.status}`;
+    return res.text();
+  })
+  .then(text => {
+    el.innerHTML += `<br><b class="ok">УСПЕХ.</b> Получены данные:<br><code>${text.slice(0,500)}</code>`;
+  })
+  .catch(err => {
+    el.innerHTML = `<b class="err">ОШИБКА:</b> ${err.message}<br><br>Это, скорее всего, означает блокировку CORS — сервер не разрешает запросы с этого сайта.`;
+  });
+</script>
+</body>
+</html>
